@@ -1,150 +1,190 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PisinBet</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #111;
-      color: #fff;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background-color: #1e1e1e;
-      padding: 20px;
-      text-align: center;
-    }
-    main {
-      padding: 20px;
-      max-width: 800px;
-      margin: auto;
-    }
-    .formulario, .saldo, .aposta, .historico, .mines {
-      background: #222;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-    }
-    input, select, button {
-      padding: 10px;
-      margin: 5px 0;
-      width: 100%;
-      border-radius: 5px;
-      border: none;
-    }
-    button {
-      background: #28a745;
-      color: #fff;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #218838;
-    }
-    .historico-item {
-      background: #333;
-      margin: 5px 0;
-      padding: 10px;
-      border-radius: 5px;
-    }
-    .roleta-resultado {
-      font-size: 2em;
-      text-align: center;
-      margin-top: 10px;
-    }
-    .grid-mines {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .grid-mines button {
-      height: 60px;
-      font-size: 1.5em;
-      background: #444;
-    }
-    .menu-jogos {
-      display: flex;
-      justify-content: space-around;
-      margin-bottom: 20px;
-    }
-    .jogo-card {
-      background: #333;
-      border-radius: 10px;
-      padding: 10px;
-      width: 30%;
-      text-align: center;
-      cursor: pointer;
-    }
-    .jogo-card:hover {
-      background: #444;
-    }
-    .valor-ganho {
-      margin-top: 10px;
-      font-size: 1.2em;
-      color: gold;
-      text-align: center;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>PisinBet</h1>
-  </header>
-  <main>
-    <div class="formulario" id="telaLogin">
-      <h2>Login</h2>
-      <input type="email" id="emailLogin" placeholder="Email" />
-      <input type="password" id="senhaLogin" placeholder="Senha" />
-      <button onclick="login()">Entrar</button>
-      <p>Ainda não tem conta? <a href="#" onclick="mostrarCadastro(); return false;">Cadastre-se</a></p>
-    </div>
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
-    <div class="formulario" id="telaCadastro" style="display:none">
-      <h2>Cadastro</h2>
-      <input type="email" id="emailCadastro" placeholder="Email" />
-      <input type="password" id="senhaCadastro" placeholder="Senha" />
-      <button onclick="cadastrar()">Cadastrar</button>
-      <p>Já tem conta? <a href="#" onclick="mostrarLogin(); return false;">Fazer login</a></p>
-    </div>
-
-    <div id="telaJogo" style="display:none">
-      <!-- Restante do código da tela de jogos permanece igual -->
-      <!-- ... -->
-    </div>
-  </main>
-
-  <script>
-    // Adicione estas funções no início do seu script
-    function mostrarCadastro() {
-      document.getElementById("telaLogin").style.display = "none";
-      document.getElementById("telaCadastro").style.display = "block";
+const generateGrid = (minesCount: number) => {
+  const total = 25;
+  const grid = Array(total).fill(false);
+  let placed = 0;
+  while (placed < minesCount) {
+    const idx = Math.floor(Math.random() * total);
+    if (!grid[idx]) {
+      grid[idx] = true;
+      placed++;
     }
+  }
+  return grid;
+};
 
-    function mostrarLogin() {
-      document.getElementById("telaCadastro").style.display = "none";
-      document.getElementById("telaLogin").style.display = "block";
+const fakeDB: Record<string, { password: string; balance: number }> = {};
+
+export default function Pisinbet() {
+  const [user, setUser] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
+  const [usernameInput, setUsernameInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+  const [balance, setBalance] = useState(0);
+  const [betLog, setBetLog] = useState<string[]>([]);
+  const [minesGrid, setMinesGrid] = useState<boolean[]>([]);
+  const [revealed, setRevealed] = useState<number[]>([]);
+  const [minesGameActive, setMinesGameActive] = useState(false);
+  const [minesBet, setMinesBet] = useState(0);
+  const [multiplier, setMultiplier] = useState(1.0);
+  const [aviatorGameActive, setAviatorGameActive] = useState(false);
+  const [aviatorBet, setAviatorBet] = useState(0);
+  const [aviatorMultiplier, setAviatorMultiplier] = useState(1.0);
+  const [aviatorTimer, setAviatorTimer] = useState<NodeJS.Timeout | null>(null);
+  const minesCount = 5;
+
+  const handleLogin = () => {
+    const userData = fakeDB[usernameInput];
+    if (userData && userData.password === passwordInput) {
+      setUser(usernameInput);
+      setPassword(userData.password);
+      setBalance(userData.balance);
+    } else {
+      alert("Usuário ou senha inválidos!");
     }
+  };
 
-    // Restante do seu código JavaScript existente
-    let saldo = 1000;
-    const simbolos = ["7️⃣", "🍎", "🔥", "💧", "🐯", "🪙"];
-    let minasAtivas = [];
-    let revealed = 0;
-    let valorApostaMines = 0;
-    let multiplicador = 1;
-
-    function atualizarSaldo() {
-      document.getElementById("saldo").innerText = `Saldo: R$ ${saldo.toFixed(2)}`;
+  const handleRegister = () => {
+    if (fakeDB[usernameInput]) {
+      alert("Usuário já existe!");
+    } else {
+      fakeDB[usernameInput] = { password: passwordInput, balance: 1000 };
+      alert("Cadastro realizado com sucesso!");
     }
+  };
 
-    // ... (mantenha todas as outras funções existentes)
-    
-    // Certifique-se de que todas as outras funções do seu código original estão aqui
-    // incluindo login(), cadastrar(), apostar(), jogarRoleta(), etc.
-    
-  </script>
-</body>
-</html>
+  const logout = () => {
+    if (user) {
+      fakeDB[user].balance = balance;
+    }
+    setUser(null);
+    setUsernameInput("");
+    setPasswordInput("");
+  };
+
+  const placeBet = (amount: number, game: string) => {
+    if (amount > balance) return alert("Saldo insuficiente!");
+    setBalance(balance - amount);
+    setBetLog([`Apostou R$${amount} em ${game}`, ...betLog]);
+  };
+
+  const startMinesGame = (amount: number) => {
+    if (amount > balance) return alert("Saldo insuficiente!");
+    setBalance(balance - amount);
+    setBetLog([`Iniciou Mines com R$${amount}`, ...betLog]);
+    setMinesGrid(generateGrid(minesCount));
+    setRevealed([]);
+    setMultiplier(1.0);
+    setMinesGameActive(true);
+    setMinesBet(amount);
+  };
+
+  const revealTile = (index: number) => {
+    if (!minesGameActive || revealed.includes(index)) return;
+    if (minesGrid[index]) {
+      setBetLog([`Explodiu no Mines! Perdeu R$${minesBet}`, ...betLog]);
+      setMinesGameActive(false);
+    } else {
+      const newRevealed = [...revealed, index];
+      setRevealed(newRevealed);
+      setMultiplier((prev) => +(prev + 0.25).toFixed(2));
+    }
+  };
+
+  const cashout = () => {
+    const profit = +(minesBet * multiplier).toFixed(2);
+    setBalance(balance + profit);
+    setBetLog([`Retirou R$${profit} no Mines`, ...betLog]);
+    setMinesGameActive(false);
+  };
+
+  const startAviator = (amount: number) => {
+    if (amount > balance) return alert("Saldo insuficiente!");
+    setBalance(balance - amount);
+    setBetLog([`Iniciou Aviator com R$${amount}`, ...betLog]);
+    setAviatorGameActive(true);
+    setAviatorBet(amount);
+    setAviatorMultiplier(1.0);
+    const timer = setInterval(() => {
+      setAviatorMultiplier((prev) => +(prev + 0.1).toFixed(2));
+      if (Math.random() < 0.05) {
+        clearInterval(timer);
+        setAviatorTimer(null);
+        setAviatorGameActive(false);
+        setBetLog([`Avião caiu! Perdeu R$${amount}`, ...betLog]);
+      }
+    }, 500);
+    setAviatorTimer(timer);
+  };
+
+  const cashoutAviator = () => {
+    if (aviatorTimer) clearInterval(aviatorTimer);
+    const profit = +(aviatorBet * aviatorMultiplier).toFixed(2);
+    setBalance(balance + profit);
+    setBetLog([`Retirou R$${profit} no Aviator`, ...betLog]);
+    setAviatorGameActive(false);
+    setAviatorTimer(null);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (aviatorTimer) clearInterval(aviatorTimer);
+    };
+  }, [aviatorTimer]);
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-800 to-indigo-900 text-white">
+        <Card className="p-6 bg-white text-black rounded-2xl shadow-lg w-96">
+          <CardContent className="flex flex-col gap-4">
+            <h1 className="text-xl font-bold">Pisinbet - Login / Cadastro</h1>
+            <Input placeholder="Usuário" value={usernameInput} onChange={(e) => setUsernameInput(e.target.value)} />
+            <Input type="password" placeholder="Senha" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} />
+            <div className="flex justify-between gap-2">
+              <Button className="w-full" onClick={handleLogin}>Entrar</Button>
+              <Button className="w-full" onClick={handleRegister} variant="outline">Cadastrar</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 text-black p-4">
+      <header className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-purple-700">Pisinbet</h1>
+        <div>
+          <span className="mr-4 font-medium">Saldo: R${balance}</span>
+          <Button variant="outline" onClick={logout}>Sair</Button>
+        </div>
+      </header>
+
+      <Tabs defaultValue="futebol">
+        <TabsList>
+          <TabsTrigger value="futebol">Futebol</TabsTrigger>
+          <TabsTrigger value="basquete">Basquete</TabsTrigger>
+          <TabsTrigger value="e-sports">E-Sports</TabsTrigger>
+          <TabsTrigger value="mines">Mines</TabsTrigger>
+          <TabsTrigger value="aviator">Aviator</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="futebol">
+          <Card className="my-4">
+            <CardContent className="flex justify-between items-center p-4">
+              <span>Flamengo x Palmeiras</span>
+              <Button onClick={() => placeBet(100, "Flamengo x Palmeiras")}>Apostar R$100</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="basquete">
+          <Card className="my-4">
+            <CardContent className="flex justify-between items-center p-4">
+              <span>Lakers x Celtics</span>
+              <Button onClick={() => placeBet(
