@@ -22,7 +22,7 @@
       max-width: 800px;
       margin: auto;
     }
-    .formulario, .saldo, .aposta, .historico, .mines, .aviator {
+    .formulario, .saldo, .aposta, .historico, .mines {
       background: #222;
       padding: 20px;
       border-radius: 10px;
@@ -74,7 +74,7 @@
       background: #333;
       border-radius: 10px;
       padding: 10px;
-      width: 22%;
+      width: 30%;
       text-align: center;
       cursor: pointer;
     }
@@ -87,202 +87,64 @@
       color: gold;
       text-align: center;
     }
-    #aviatorChart {
-      width: 100%;
-      height: 200px;
-      background: #333;
-      margin: 10px 0;
-      position: relative;
-      overflow: hidden;
-    }
-    #airplane {
-      position: absolute;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 2em;
-    }
-    #multiplierDisplay {
-      font-size: 2em;
-      text-align: center;
-      margin: 10px 0;
-      color: #28a745;
-    }
-    .auto-cashout {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 10px 0;
-    }
-    .auto-cashout input {
-      width: 60px;
-    }
   </style>
 </head>
 <body>
-  <!-- Cabeçalho e telas de login/cadastro permanecem iguais -->
-  <!-- ... -->
-
-  <div id="telaJogo" style="display:none">
-    <div class="saldo" id="saldo">Saldo: R$ 1000</div>
-
-    <div class="menu-jogos">
-      <div class="jogo-card" onclick="scrollToGame('aposta')">Apostas</div>
-      <div class="jogo-card" onclick="scrollToGame('roleta')">Tigrinho</div>
-      <div class="jogo-card" onclick="scrollToGame('mines')">Mines</div>
-      <div class="jogo-card" onclick="scrollToGame('aviator')">Aviator</div>
+  <header>
+    <h1>PisinBet</h1>
+  </header>
+  <main>
+    <div class="formulario" id="telaLogin">
+      <h2>Login</h2>
+      <input type="email" id="emailLogin" placeholder="Email" />
+      <input type="password" id="senhaLogin" placeholder="Senha" />
+      <button onclick="login()">Entrar</button>
+      <p>Ainda não tem conta? <a href="#" onclick="mostrarCadastro(); return false;">Cadastre-se</a></p>
     </div>
 
-    <!-- Seções existentes permanecem iguais -->
-    <!-- ... -->
-
-    <!-- Nova seção do Aviator -->
-    <div class="aviator" id="aviator">
-      <h2>Aviator</h2>
-      <label>Valor da aposta:</label>
-      <input type="number" id="valorAviator" placeholder="Digite o valor" />
-      
-      <div class="auto-cashout">
-        <label>Saque automático em:</label>
-        <input type="number" id="autoCashout" placeholder="Ex: 2" step="0.1" min="1.1" value="2">
-        <span>x</span>
-      </div>
-      
-      <button onclick="startAviator()">Apostar</button>
-      <button onclick="cashOutAviator()" id="cashOutBtn" disabled>Sacar</button>
-      
-      <div id="aviatorChart">
-        <div id="airplane">✈️</div>
-      </div>
-      
-      <div id="multiplierDisplay">1.00x</div>
-      <div class="valor-ganho" id="aviatorWin"></div>
-      
-      <div id="aviatorHistory" style="margin-top: 20px;">
-        <h3>Histórico:</h3>
-        <div id="aviatorHistoryList"></div>
-      </div>
+    <div class="formulario" id="telaCadastro" style="display:none">
+      <h2>Cadastro</h2>
+      <input type="email" id="emailCadastro" placeholder="Email" />
+      <input type="password" id="senhaCadastro" placeholder="Senha" />
+      <button onclick="cadastrar()">Cadastrar</button>
+      <p>Já tem conta? <a href="#" onclick="mostrarLogin(); return false;">Fazer login</a></p>
     </div>
 
-    <div class="historico">
-      <h2>Histórico Geral</h2>
-      <div id="historico"></div>
+    <div id="telaJogo" style="display:none">
+      <!-- Restante do código da tela de jogos permanece igual -->
+      <!-- ... -->
     </div>
-  </div>
+  </main>
 
   <script>
-    // Variáveis existentes...
-    let aviatorGameActive = false;
-    let aviatorMultiplier = 1.0;
-    let aviatorBetAmount = 0;
-    let aviatorInterval;
-    let autoCashoutValue = 2.0;
-
-    // Funções existentes...
-    
-    // Funções do Aviator
-    function startAviator() {
-      if (aviatorGameActive) return;
-      
-      const valor = parseFloat(document.getElementById("valorAviator").value);
-      autoCashoutValue = parseFloat(document.getElementById("autoCashout").value) || 2.0;
-      
-      if (isNaN(valor) {
-        alert("Digite um valor válido para apostar.");
-        return;
-      }
-      
-      if (valor > saldo) {
-        alert("Saldo insuficiente.");
-        return;
-      }
-      
-      saldo -= valor;
-      aviatorBetAmount = valor;
-      aviatorGameActive = true;
-      aviatorMultiplier = 1.0;
-      
-      document.getElementById("cashOutBtn").disabled = false;
-      document.getElementById("aviatorWin").innerText = "";
-      document.getElementById("multiplierDisplay").style.color = "#28a745";
-      
-      updateAviatorDisplay();
-      
-      // Inicia o jogo
-      aviatorInterval = setInterval(updateAviator, 100);
-    }
-    
-    function updateAviator() {
-      // Aumenta o multiplicador
-      aviatorMultiplier += 0.01 * (1 + Math.random() * 0.3);
-      updateAviatorDisplay();
-      
-      // Verifica saque automático
-      if (aviatorMultiplier >= autoCashoutValue) {
-        cashOutAviator();
-        return;
-      }
-      
-      // Chance aleatória de o avião decolar (fim do jogo)
-      if (Math.random() < 0.008) {
-        endAviatorGame();
-      }
-    }
-    
-    function updateAviatorDisplay() {
-      document.getElementById("multiplierDisplay").innerText = aviatorMultiplier.toFixed(2) + "x";
-      const airplane = document.getElementById("airplane");
-      const chartHeight = document.getElementById("aviatorChart").offsetHeight;
-      const maxHeight = chartHeight - 40;
-      const height = Math.min(maxHeight, maxHeight * (aviatorMultiplier / 10));
-      airplane.style.bottom = `${10 + height}px`;
-    }
-    
-    function cashOutAviator() {
-      if (!aviatorGameActive) return;
-      
-      const winAmount = aviatorBetAmount * aviatorMultiplier;
-      saldo += winAmount;
-      aviatorGameActive = false;
-      
-      clearInterval(aviatorInterval);
-      document.getElementById("cashOutBtn").disabled = true;
-      document.getElementById("aviatorWin").innerText = `Você sacou em ${aviatorMultiplier.toFixed(2)}x e ganhou R$ ${winAmount.toFixed(2)}!`;
-      document.getElementById("multiplierDisplay").style.color = "gold";
-      
-      addToAviatorHistory(aviatorMultiplier, true);
-      adicionarHistorico(`Saque no Aviator (${aviatorMultiplier.toFixed(2)}x)`, winAmount);
-      atualizarSaldo();
-    }
-    
-    function endAviatorGame() {
-      if (!aviatorGameActive) return;
-      
-      aviatorGameActive = false;
-      clearInterval(aviatorInterval);
-      document.getElementById("cashOutBtn").disabled = true;
-      document.getElementById("aviatorWin").innerText = `O avião decolou! Você perdeu R$ ${aviatorBetAmount.toFixed(2)}.`;
-      document.getElementById("multiplierDisplay").style.color = "red";
-      
-      addToAviatorHistory(aviatorMultiplier, false);
-      adicionarHistorico(`Aviator (perdeu em ${aviatorMultiplier.toFixed(2)}x)`, -aviatorBetAmount);
-      atualizarSaldo();
-    }
-    
-    function addToAviatorHistory(multiplier, won) {
-      const historyItem = document.createElement("div");
-      historyItem.style.color = won ? "#28a745" : "red";
-      historyItem.innerText = `${multiplier.toFixed(2)}x`;
-      document.getElementById("aviatorHistoryList").prepend(historyItem);
-      
-      // Limita o histórico a 10 itens
-      const historyList = document.getElementById("aviatorHistoryList");
-      if (historyList.children.length > 10) {
-        historyList.removeChild(historyList.lastChild);
-      }
+    // Adicione estas funções no início do seu script
+    function mostrarCadastro() {
+      document.getElementById("telaLogin").style.display = "none";
+      document.getElementById("telaCadastro").style.display = "block";
     }
 
-    // Restante do código permanece igual...
+    function mostrarLogin() {
+      document.getElementById("telaCadastro").style.display = "none";
+      document.getElementById("telaLogin").style.display = "block";
+    }
+
+    // Restante do seu código JavaScript existente
+    let saldo = 1000;
+    const simbolos = ["7️⃣", "🍎", "🔥", "💧", "🐯", "🪙"];
+    let minasAtivas = [];
+    let revealed = 0;
+    let valorApostaMines = 0;
+    let multiplicador = 1;
+
+    function atualizarSaldo() {
+      document.getElementById("saldo").innerText = `Saldo: R$ ${saldo.toFixed(2)}`;
+    }
+
+    // ... (mantenha todas as outras funções existentes)
+    
+    // Certifique-se de que todas as outras funções do seu código original estão aqui
+    // incluindo login(), cadastrar(), apostar(), jogarRoleta(), etc.
+    
   </script>
 </body>
 </html>
