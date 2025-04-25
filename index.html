@@ -116,8 +116,23 @@
     const valorAposta = 100;
     let cartaAtual = null;
 
+    function atualizarSaldo() {
+      document.getElementById("saldo").textContent = saldo.toFixed(2);
+    }
+
+    function jogar(jogo) {
+      document.querySelectorAll(".game-screen").forEach(el => el.classList.remove("visible"));
+      document.getElementById("game-" + jogo).classList.add("visible");
+
+      if (jogo === 'Hilo') iniciarHilo();
+    }
+
+    function voltarMenu() {
+      document.querySelectorAll(".game-screen").forEach(el => el.classList.remove("visible"));
+    }
+
     function sortearCarta() {
-      return Math.floor(Math.random() * 13) + 1; // cartas de 1 a 13
+      return Math.floor(Math.random() * 13) + 1;
     }
 
     function iniciarHilo() {
@@ -146,8 +161,6 @@
       document.getElementById('resultado-hilo').textContent = resultado;
       atualizarSaldo();
     }
-
-    // As funções jogar(), voltarMenu(), atualizarSaldo(), Mines, Dooble e Aviator continuam aqui...
   </script>
 </body>
 </html>
