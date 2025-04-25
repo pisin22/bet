@@ -125,6 +125,8 @@
       document.querySelectorAll(".game-screen").forEach(el => el.classList.remove("visible"));
       // Exibe o jogo escolhido
       document.getElementById("game-" + jogo).classList.add("visible");
+      // Garante que o jogo "Mines" tenha uma grade gerada ao iniciar
+      if (jogo === "Mines") gerarMinesGrid();
     }
 
     function voltarMenu() {
@@ -191,4 +193,45 @@
 
     // DOOBLE LOGIC
     function apostarDooble(escolha) {
-      const resultado = Math.random
+      const resultado = Math.random() < 0.5 ? 'cara' : 'coroa';
+      const ganhei = resultado === escolha;
+      if (ganhei) saldo += valorAposta;
+      else saldo -= valorAposta;
+      document.getElementById("resultado-dooble").textContent = ganhei ? `Você ganhou! Resultado: ${resultado}` : `Você perdeu! Resultado: ${resultado}`;
+      atualizarSaldo();
+    }
+
+    // HILO LOGIC
+    function sortearCarta() {
+      return Math.floor(Math.random() * 13) + 1;
+    }
+
+    function iniciarHilo() {
+      cartaAtual = sortearCarta();
+      document.getElementById('carta-atual').textContent = `Carta: ${cartaAtual}`;
+      document.getElementById('resultado-hilo').textContent = '';
+    }
+
+    function apostarHilo(escolha) {
+      if (cartaAtual === null) iniciarHilo();
+      const novaCarta = sortearCarta();
+      let resultado = '';
+
+      if ((escolha === 'maior' && novaCarta > cartaAtual) || (escolha === 'menor' && novaCarta < cartaAtual)) {
+        saldo += valorAposta;
+        resultado = `Nova carta: ${novaCarta}. Você ganhou R$${valorAposta}`;
+      } else if (novaCarta === cartaAtual) {
+        resultado = `Nova carta: ${novaCarta}. Empate! Sem perda.`;
+      } else {
+        saldo -= valorAposta;
+        resultado = `Nova carta: ${novaCarta}. Você perdeu R$${valorAposta}`;
+      }
+
+      cartaAtual = novaCarta;
+      document.getElementById('carta-atual').textContent = `Carta: ${cartaAtual}`;
+      document.getElementById('resultado-hilo').textContent = resultado;
+      atualizarSaldo();
+    }
+  </script>
+</body>
+</html>
