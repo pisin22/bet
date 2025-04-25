@@ -121,46 +121,74 @@
     }
 
     function jogar(jogo) {
+      // Esconde todos os jogos
       document.querySelectorAll(".game-screen").forEach(el => el.classList.remove("visible"));
+      // Exibe o jogo escolhido
       document.getElementById("game-" + jogo).classList.add("visible");
-
-      if (jogo === 'Hilo') iniciarHilo();
     }
 
     function voltarMenu() {
+      // Esconde todos os jogos e volta ao menu
       document.querySelectorAll(".game-screen").forEach(el => el.classList.remove("visible"));
     }
 
-    function sortearCarta() {
-      return Math.floor(Math.random() * 13) + 1;
-    }
+    // MINES LOGIC
+    let minas = 3;
+    let multiplicador = 1.00;
+    let minasDescobertas = 0;
+    let jogoIniciado = false;
 
-    function iniciarHilo() {
-      cartaAtual = sortearCarta();
-      document.getElementById('carta-atual').textContent = `Carta: ${cartaAtual}`;
-      document.getElementById('resultado-hilo').textContent = '';
-    }
+    function gerarMinesGrid() {
+      const grid = document.getElementById("mines-grid");
+      grid.innerHTML = "";
+      const totalCelulas = 25;
+      const totalMinas = minas;
 
-    function apostarHilo(escolha) {
-      if (cartaAtual === null) iniciarHilo();
-      const novaCarta = sortearCarta();
-      let resultado = '';
-
-      if ((escolha === 'maior' && novaCarta > cartaAtual) || (escolha === 'menor' && novaCarta < cartaAtual)) {
-        saldo += valorAposta;
-        resultado = `Nova carta: ${novaCarta}. Você ganhou R$${valorAposta}`;
-      } else if (novaCarta === cartaAtual) {
-        resultado = `Nova carta: ${novaCarta}. Empate! Sem perda.`;
-      } else {
-        saldo -= valorAposta;
-        resultado = `Nova carta: ${novaCarta}. Você perdeu R$${valorAposta}`;
+      const minasPosicoes = [];
+      while (minasPosicoes.length < totalMinas) {
+        const pos = Math.floor(Math.random() * totalCelulas);
+        if (!minasPosicoes.includes(pos)) {
+          minasPosicoes.push(pos);
+        }
       }
 
-      cartaAtual = novaCarta;
-      document.getElementById('carta-atual').textContent = `Carta: ${cartaAtual}`;
-      document.getElementById('resultado-hilo').textContent = resultado;
+      for (let i = 0; i < totalCelulas; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.addEventListener("click", () => revelarCelula(i, minasPosicoes));
+        grid.appendChild(cell);
+      }
+    }
+
+    function revelarCelula(index, minasPosicoes) {
+      if (jogoIniciado) return;
+      jogoIniciado = true;
+
+      const grid = document.getElementById("mines-grid");
+      const cell = grid.children[index];
+
+      if (minasPosicoes.includes(index)) {
+        cell.classList.add("mine");
+        document.getElementById("resultado-mines").textContent = "Você clicou em uma bomba! Perdeu!";
+        saldo -= valorAposta;
+      } else {
+        minasDescobertas++;
+        multiplicador += 0.05;
+        cell.classList.add("revealed");
+        document.getElementById("resultado-mines").textContent = `Você encontrou uma estrela! Multiplicador: x${multiplicador.toFixed(2)}`;
+      }
+
       atualizarSaldo();
     }
-  </script>
-</body>
-</html>
+
+    function sacarGanho() {
+      saldo += valorAposta * multiplicador;
+      document.getElementById("resultado-mines").textContent = `Você sacou! Saldo: R$${saldo.toFixed(2)}`;
+      atualizarSaldo();
+      jogoIniciado = false;
+      gerarMinesGrid();
+    }
+
+    // DOOBLE LOGIC
+    function apostarDooble(escolha) {
+      const resultado = Math.random
